@@ -1,7 +1,9 @@
 /// https://concourse-ci.org/implementing-resource-types.html
+use std::fmt::Debug;
+
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct InOutput<V, M> {
     pub version: V,
     pub metadata: Option<M>,
@@ -13,20 +15,20 @@ pub struct OutOutput<V, M> {
     pub metadata: Option<M>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct CheckInput<S, V> {
     pub source: S,
     pub version: Option<V>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct InInput<S, V, P> {
     pub source: S,
     pub version: V,
     pub params: Option<P>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct OutInput<S, P> {
     pub source: S,
     pub params: Option<P>,
@@ -42,13 +44,13 @@ pub struct BuildParameters {
 }
 
 pub trait Resource {
-    type Source: DeserializeOwned;
-    type Version: Serialize + DeserializeOwned;
+    type Source: DeserializeOwned + Debug;
+    type Version: Serialize + DeserializeOwned + Debug;
 
-    type InParams: DeserializeOwned;
-    type InMetadata: Serialize;
-    type OutParams: DeserializeOwned;
-    type OutMetadata: Serialize;
+    type InParams: DeserializeOwned + Debug;
+    type InMetadata: Serialize + Debug;
+    type OutParams: DeserializeOwned + Debug;
+    type OutMetadata: Serialize + Debug;
 
     /// https://concourse-ci.org/implementing-resource-types.html#resource-check
     fn resource_check(source: Self::Source, version: Option<Self::Version>) -> Vec<Self::Version>;
@@ -103,7 +105,8 @@ macro_rules! create_resource {
                     let input: CheckInput<
                         <$resource as Resource>::Source,
                         <$resource as Resource>::Version,
-                    > = serde_json::from_str(&input_buffer).expect("error deserializing input");
+                    > = dbg!(serde_json::from_str(&input_buffer))
+                        .expect("error deserializing input");
                     let result =
                         <$resource as Resource>::resource_check(input.source, input.version);
                     println!(
@@ -116,7 +119,8 @@ macro_rules! create_resource {
                         <$resource as Resource>::Source,
                         <$resource as Resource>::Version,
                         <$resource as Resource>::InParams,
-                    > = serde_json::from_str(&input_buffer).expect("error deserializing input");
+                    > = dbg!(serde_json::from_str(&input_buffer))
+                        .expect("error deserializing input");
                     let result = <$resource as Resource>::resource_in(
                         input.source,
                         input.version,
@@ -134,7 +138,8 @@ macro_rules! create_resource {
                     let input: OutInput<
                         <$resource as Resource>::Source,
                         <$resource as Resource>::OutParams,
-                    > = serde_json::from_str(&input_buffer).expect("error deserializing input");
+                    > = dbg!(serde_json::from_str(&input_buffer))
+                        .expect("error deserializing input");
                     let result = <$resource as Resource>::resource_out(input.source, input.params);
                     println!(
                         "{}",
