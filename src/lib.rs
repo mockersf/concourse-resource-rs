@@ -20,7 +20,7 @@ use std::fmt::Debug;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 /// Output of the "in" step of the resource
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug)]
 pub struct InOutput<V, M> {
     /// The fetched version.
     pub version: V,
@@ -30,13 +30,51 @@ pub struct InOutput<V, M> {
 }
 
 /// Output of the "out" step of the resource
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug)]
 pub struct OutOutput<V, M> {
     /// The resulting version.
     pub version: V,
     /// A list of key-value pairs. This data is intended for public consumption and will make
     /// it upstream, intended to be shown on the build's page.
     pub metadata: Option<M>,
+}
+
+///
+#[derive(Serialize, Debug)]
+pub struct KV {
+    ///
+    pub name: String,
+    ///
+    pub value: String,
+}
+
+/// Marker struct for an empty value
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+pub struct Empty;
+impl From<Empty> for Vec<KV> {
+    fn from(_: Empty) -> Vec<KV> {
+        vec![]
+    }
+}
+
+/// Output of the "in" step of the resource
+#[derive(Serialize, Debug)]
+pub struct InOutputKV<V> {
+    /// The fetched version.
+    pub version: V,
+    /// A list of key-value pairs. This data is intended for public consumption and will make
+    /// it upstream, intended to be shown on the build's page.
+    pub metadata: Option<Vec<KV>>,
+}
+
+/// Output of the "out" step of the resource
+#[derive(Serialize, Debug)]
+pub struct OutOutputKV<V> {
+    /// The resulting version.
+    pub version: V,
+    /// A list of key-value pairs. This data is intended for public consumption and will make
+    /// it upstream, intended to be shown on the build's page.
+    pub metadata: Option<Vec<KV>>,
 }
 
 /// Input of the "check" step of the resource
@@ -103,12 +141,12 @@ pub trait Resource {
     type InParams: DeserializeOwned + Debug;
     /// A list of key-value pairs for the "in" step. This data is intended for public
     /// consumption and will make it upstream, intended to be shown on the build's page.
-    type InMetadata: Serialize + Debug;
+    type InMetadata: Serialize + Debug + Into<Vec<KV>>;
     /// Parameters for the "out" step, from the `params` field
     type OutParams: DeserializeOwned + Debug;
     /// A list of key-value pairs for the "out" step. This data is intended for public
     /// consumption and will make it upstream, intended to be shown on the build's page.
-    type OutMetadata: Serialize + Debug;
+    type OutMetadata: Serialize + Debug + Into<Vec<KV>>;
 
     /// A resource type's check method is invoked to detect new versions of the resource. It is
     /// given the configured source and current version, and must return the array of new
@@ -221,10 +259,13 @@ macro_rules! create_resource {
                             eprintln!("Error! {}", error);
                             std::process::exit(1);
                         }
-                        Ok(result) => println!(
+                        Ok(InOutput { version, metadata }) => println!(
                             "{}",
-                            dbg!(serde_json::to_string(&result))
-                                .expect("error serializing response")
+                            dbg!(serde_json::to_string(&InOutputKV {
+                                version,
+                                metadata: metadata.map(|md| md.into())
+                            }))
+                            .expect("error serializing response")
                         ),
                     };
                 }
@@ -243,7 +284,11 @@ macro_rules! create_resource {
                     );
                     println!(
                         "{}",
-                        dbg!(serde_json::to_string(&result)).expect("error serializing response")
+                        dbg!(serde_json::to_string(&OutOutputKV {
+                            version: result.version,
+                            metadata: result.metadata.map(|md| md.into())
+                        }))
+                        .expect("error serializing response")
                     );
                 }
                 v => eprintln!("unexpected being called as '{}'", v),
