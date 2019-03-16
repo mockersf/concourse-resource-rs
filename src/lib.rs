@@ -196,7 +196,10 @@ macro_rules! create_resource {
                         .expect("error deserializing input");
                     let result =
                         <$resource as Resource>::resource_check(input.source, input.version);
-                    dbg!(serde_json::to_string(&result)).expect("error serializing response");
+                    println!(
+                        "{}",
+                        dbg!(serde_json::to_string(&result)).expect("error serializing response")
+                    );
                 }
                 "/opt/resource/in" => {
                     let input: InInput<
@@ -218,8 +221,11 @@ macro_rules! create_resource {
                             eprintln!("Error! {}", error);
                             std::process::exit(1);
                         }
-                        Ok(result) => dbg!(serde_json::to_string(&result))
-                            .expect("error serializing response"),
+                        Ok(result) => println!(
+                            "{}",
+                            dbg!(serde_json::to_string(&result))
+                                .expect("error serializing response")
+                        ),
                     };
                 }
                 "/opt/resource/out" => {
@@ -235,7 +241,10 @@ macro_rules! create_resource {
                             .next()
                             .expect("expected path as first parameter"),
                     );
-                    dbg!(serde_json::to_string(&result)).expect("error serializing response");
+                    println!(
+                        "{}",
+                        dbg!(serde_json::to_string(&result)).expect("error serializing response")
+                    );
                 }
                 v => eprintln!("unexpected being called as '{}'", v),
             }
