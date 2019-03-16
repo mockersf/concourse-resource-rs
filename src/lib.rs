@@ -79,15 +79,15 @@ pub struct OutInput<S, P> {
 pub struct BuildMetadata {
     /// The internal identifier for the build. Right now this is numeric but it may become
     /// a guid in the future. Treat it as an absolute reference to the build.
-    pub build_id: String,
+    pub id: String,
     /// The build number within the build's job.
-    pub build_name: Option<String>,
+    pub name: Option<u32>,
     /// The name of the build's job.
-    pub build_job_name: Option<String>,
+    pub job_name: Option<String>,
     /// The pipeline that the build's job lives in.
-    pub build_pipeline_name: Option<String>,
+    pub pipeline_name: Option<String>,
     /// The team that the build belongs to.
-    pub build_team_name: String,
+    pub team_name: String,
     /// The public URL for your ATC; useful for debugging.
     pub atc_external_url: String,
 }
@@ -156,12 +156,14 @@ pub trait Resource {
     /// [Concourse documentation](https://concourse-ci.org/implementing-resource-types.html#resource-metadata)
     fn build_metadata() -> BuildMetadata {
         BuildMetadata {
-            build_id: std::env::var("BUILD_ID")
-                .expect("environment variable BUILD_ID should be present"),
-            build_name: std::env::var("BUILD_NAME").ok(),
-            build_job_name: std::env::var("BUILD_JOB_NAME").ok(),
-            build_pipeline_name: std::env::var("BUILD_PIPELINE_NAME").ok(),
-            build_team_name: std::env::var("BUILD_TEAM_NAME")
+            id: std::env::var("BUILD_ID").expect("environment variable BUILD_ID should be present"),
+            name: std::env::var("BUILD_NAME")
+                .map_err(|_| ())
+                .and_then(|v| v.parse::<u32>().map_err(|_| ()))
+                .ok(),
+            job_name: std::env::var("BUILD_JOB_NAME").ok(),
+            pipeline_name: std::env::var("BUILD_PIPELINE_NAME").ok(),
+            team_name: std::env::var("BUILD_TEAM_NAME")
                 .expect("environment variable BUILD_TEAM_NAME should be present"),
             atc_external_url: std::env::var("ATC_EXTERNAL_URL")
                 .expect("environment variable ATC_EXTERNAL_URL should be present"),
