@@ -19,7 +19,6 @@ use std::fmt::Debug;
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-// #[macro_export]
 pub use concourse_resource_derive::*;
 
 /// Output of the "in" step of the resource
