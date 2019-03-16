@@ -8,7 +8,7 @@
     unstable_features,
     unused_import_braces,
     unused_qualifications,
-    missing_docs
+    // missing_docs
 )]
 
 //! Helper to implement a [Concourse](https://concourse-ci.org/) resource in Rust
@@ -18,6 +18,9 @@
 use std::fmt::Debug;
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
+
+// #[macro_export]
+pub use concourse_resource_derive::*;
 
 /// Output of the "in" step of the resource
 #[derive(Serialize, Debug)]
@@ -39,20 +42,21 @@ pub struct OutOutput<V, M> {
     pub metadata: Option<M>,
 }
 
-///
 #[derive(Serialize, Debug)]
 pub struct KV {
-    ///
     pub name: String,
-    ///
     pub value: String,
+}
+
+pub trait IntoMetadataKV {
+    fn into_metadata_kv(self) -> Vec<KV>;
 }
 
 /// Marker struct for an empty value
 #[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 pub struct Empty;
-impl From<Empty> for Vec<KV> {
-    fn from(_: Empty) -> Vec<KV> {
+impl IntoMetadataKV for Empty {
+    fn into_metadata_kv(self) -> Vec<KV> {
         vec![]
     }
 }
@@ -141,12 +145,12 @@ pub trait Resource {
     type InParams: DeserializeOwned + Debug;
     /// A list of key-value pairs for the "in" step. This data is intended for public
     /// consumption and will make it upstream, intended to be shown on the build's page.
-    type InMetadata: Serialize + Debug + Into<Vec<KV>>;
+    type InMetadata: Serialize + Debug + IntoMetadataKV;
     /// Parameters for the "out" step, from the `params` field
     type OutParams: DeserializeOwned + Debug;
     /// A list of key-value pairs for the "out" step. This data is intended for public
     /// consumption and will make it upstream, intended to be shown on the build's page.
-    type OutMetadata: Serialize + Debug + Into<Vec<KV>>;
+    type OutMetadata: Serialize + Debug + IntoMetadataKV;
 
     /// A resource type's check method is invoked to detect new versions of the resource. It is
     /// given the configured source and current version, and must return the array of new
@@ -257,7 +261,7 @@ macro_rules! create_resource {
                             "{}",
                             serde_json::to_string(&InOutputKV {
                                 version,
-                                metadata: metadata.map(|md| md.into())
+                                metadata: metadata.map(|md| md.into_metadata_kv())
                             })
                             .expect("error serializing response")
                         ),
@@ -277,7 +281,7 @@ macro_rules! create_resource {
                         "{}",
                         serde_json::to_string(&OutOutputKV {
                             version: result.version,
-                            metadata: result.metadata.map(|md| md.into())
+                            metadata: result.metadata.map(|md| md.into_metadata_kv())
                         })
                         .expect("error serializing response")
                     );
