@@ -228,13 +228,12 @@ macro_rules! create_resource {
                     let input: CheckInput<
                         <$resource as Resource>::Source,
                         <$resource as Resource>::Version,
-                    > = dbg!(serde_json::from_str(&input_buffer))
-                        .expect("error deserializing input");
+                    > = serde_json::from_str(&input_buffer).expect("error deserializing input");
                     let result =
                         <$resource as Resource>::resource_check(input.source, input.version);
                     println!(
                         "{}",
-                        dbg!(serde_json::to_string(&result)).expect("error serializing response")
+                        serde_json::to_string(&result).expect("error serializing response")
                     );
                 }
                 "/opt/resource/in" => {
@@ -242,8 +241,7 @@ macro_rules! create_resource {
                         <$resource as Resource>::Source,
                         <$resource as Resource>::Version,
                         <$resource as Resource>::InParams,
-                    > = dbg!(serde_json::from_str(&input_buffer))
-                        .expect("error deserializing input");
+                    > = serde_json::from_str(&input_buffer).expect("error deserializing input");
                     let result = <$resource as Resource>::resource_in(
                         input.source,
                         input.version,
@@ -257,10 +255,10 @@ macro_rules! create_resource {
                         }
                         Ok(InOutput { version, metadata }) => println!(
                             "{}",
-                            dbg!(serde_json::to_string(&InOutputKV {
+                            serde_json::to_string(&InOutputKV {
                                 version,
                                 metadata: metadata.map(|md| md.into())
-                            }))
+                            })
                             .expect("error serializing response")
                         ),
                     };
@@ -269,8 +267,7 @@ macro_rules! create_resource {
                     let input: OutInput<
                         <$resource as Resource>::Source,
                         <$resource as Resource>::OutParams,
-                    > = dbg!(serde_json::from_str(&input_buffer))
-                        .expect("error deserializing input");
+                    > = serde_json::from_str(&input_buffer).expect("error deserializing input");
                     let result = <$resource as Resource>::resource_out(
                         input.source,
                         input.params,
@@ -278,10 +275,10 @@ macro_rules! create_resource {
                     );
                     println!(
                         "{}",
-                        dbg!(serde_json::to_string(&OutOutputKV {
+                        serde_json::to_string(&OutOutputKV {
                             version: result.version,
                             metadata: result.metadata.map(|md| md.into())
-                        }))
+                        })
                         .expect("error serializing response")
                     );
                 }
