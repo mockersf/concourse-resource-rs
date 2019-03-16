@@ -221,11 +221,9 @@ macro_rules! create_resource {
 
             handle.read_to_string(&mut input_buffer).unwrap();
 
-            match std::env::args()
-                .next()
-                .expect("should have a bin name")
-                .as_ref()
-            {
+            let mut args = std::env::args();
+
+            match args.next().expect("should have a bin name").as_ref() {
                 "/opt/resource/check" => {
                     let input: CheckInput<
                         <$resource as Resource>::Source,
@@ -250,9 +248,7 @@ macro_rules! create_resource {
                         input.source,
                         input.version,
                         input.params,
-                        &std::env::args()
-                            .next()
-                            .expect("expected path as first parameter"),
+                        &args.next().expect("expected path as first parameter"),
                     );
                     match result {
                         Err(error) => {
@@ -278,9 +274,7 @@ macro_rules! create_resource {
                     let result = <$resource as Resource>::resource_out(
                         input.source,
                         input.params,
-                        &std::env::args()
-                            .next()
-                            .expect("expected path as first parameter"),
+                        &args.next().expect("expected path as first parameter"),
                     );
                     println!(
                         "{}",
