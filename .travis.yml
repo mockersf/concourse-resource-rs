@@ -49,6 +49,14 @@ matrix:
           echo "Uploaded documentation"
     - stage: "Build docker examples"
       rust: stable
+      name: simple_hello_world
+      script: 
+        - |
+          docker build --build-arg EXAMPLE=simple_hello_world . -t mockersf/concourse-resource-rs-examples:hello_world
+          docker login -u "$DOCKER_LOGIN" -p "$DOCKER_PASSWORD"
+          docker push mockersf/concourse-resource-rs-examples:simple_hello_world
+    - stage: "Build docker examples"
+      rust: stable
       name: hello_world
       script: 
         - |

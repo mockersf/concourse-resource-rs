@@ -1,10 +1,22 @@
 # Examples
 
+* [simple hello world](#simple%20hello%20world)
 * [hello world](#hello%20world)
+
+## simple hello world
+
+This example will create a resource that will create a file `hello_world.txt" that contains "hello, world!". This resource has no configuration.
+
+### How to build:
+```
+docker build --build-arg EXAMPLE=simple_hello_world ../
+```
 
 ## hello world
 
-This example will create a resource that will create a file `hello_world.txt" that contains "Hello, world!"
+This example will create a resource that will create a file `hello_world.txt" that contains "Hello, world!". Unlike the simple example, both parts of this message can be customized.
+
+The name can be set on either the ressource or the step, with the step overriding the ressource configuration.
 
 ### How to build:
 ```
