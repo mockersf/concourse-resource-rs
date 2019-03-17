@@ -53,7 +53,7 @@ matrix:
       script: 
         - |
           docker build --build-arg EXAMPLE=hello_world . -t mockersf/concourse-resource-rs-examples:hello_world
-          docker login -u "$(DOCKER_LOGIN)" -p "$(DOCKER_PASSWORD)"
+          docker login -u "$DOCKER_LOGIN" -p "$DOCKER_PASSWORD"
           docker push mockersf/concourse-resource-rs-examples:hello_world
 
 cache:
