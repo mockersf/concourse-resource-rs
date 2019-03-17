@@ -8,21 +8,22 @@
     unstable_features,
     unused_import_braces,
     unused_qualifications,
-    // missing_docs
+    missing_docs
 )]
 
 //! Helper to implement a [Concourse](https://concourse-ci.org/) resource in Rust
 //!
 //! [Concourse documentation](https://concourse-ci.org/implementing-resource-types.html)
 
-use std::fmt::Debug;
-
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 pub use concourse_resource_derive::*;
 
+pub mod internal;
+
 /// Output of the "in" step of the resource
-#[derive(Serialize, Debug)]
+#[allow(missing_debug_implementations)]
+#[derive(Serialize)]
 pub struct InOutput<V, M> {
     /// The fetched version.
     pub version: V,
@@ -32,7 +33,8 @@ pub struct InOutput<V, M> {
 }
 
 /// Output of the "out" step of the resource
-#[derive(Serialize, Debug)]
+#[allow(missing_debug_implementations)]
+#[derive(Serialize)]
 pub struct OutOutput<V, M> {
     /// The resulting version.
     pub version: V,
@@ -41,72 +43,22 @@ pub struct OutOutput<V, M> {
     pub metadata: Option<M>,
 }
 
-#[derive(Serialize, Debug)]
-pub struct KV {
-    pub name: String,
-    pub value: String,
-}
-
+/// Trait for Metadata to be usable as Concourse Metadata. This trait can be derived if the
+/// base struct implement `serde::Deserialize`
 pub trait IntoMetadataKV {
-    fn into_metadata_kv(self) -> Vec<KV>;
+    /// Turn `self` into a `Vec` of `internal::KV`
+    fn into_metadata_kv(self) -> Vec<internal::KV>;
 }
 
-/// Marker struct for an empty value
-#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
+/// Empty value that can be used as `InParams`, `InMetadata`, `OutParams` or `OutMetadata` for
+/// a `Resource`
+#[allow(missing_debug_implementations)]
+#[derive(Serialize, Deserialize, Copy, Clone, Default)]
 pub struct Empty;
 impl IntoMetadataKV for Empty {
-    fn into_metadata_kv(self) -> Vec<KV> {
+    fn into_metadata_kv(self) -> Vec<internal::KV> {
         vec![]
     }
-}
-
-/// Output of the "in" step of the resource
-#[derive(Serialize, Debug)]
-pub struct InOutputKV<V> {
-    /// The fetched version.
-    pub version: V,
-    /// A list of key-value pairs. This data is intended for public consumption and will make
-    /// it upstream, intended to be shown on the build's page.
-    pub metadata: Option<Vec<KV>>,
-}
-
-/// Output of the "out" step of the resource
-#[derive(Serialize, Debug)]
-pub struct OutOutputKV<V> {
-    /// The resulting version.
-    pub version: V,
-    /// A list of key-value pairs. This data is intended for public consumption and will make
-    /// it upstream, intended to be shown on the build's page.
-    pub metadata: Option<Vec<KV>>,
-}
-
-/// Input of the "check" step of the resource
-#[derive(Deserialize, Debug)]
-pub struct CheckInput<S, V> {
-    /// Resource configuration, from the `source` field
-    pub source: S,
-    /// Latest version retrieved, or `None` on first check
-    pub version: Option<V>,
-}
-
-/// Input of the "in" step of the resource
-#[derive(Deserialize, Debug)]
-pub struct InInput<S, V, P> {
-    /// Resource configuration, from the `source` field
-    pub source: S,
-    /// Version to retrieve
-    pub version: V,
-    /// Step configuration, from the `params` field
-    pub params: Option<P>,
-}
-
-/// Input of the "out" step of the resource
-#[derive(Deserialize, Debug)]
-pub struct OutInput<S, P> {
-    /// Resource configuration, from the `source` field
-    pub source: S,
-    /// Step configuration, from the `params` field
-    pub params: Option<P>,
 }
 
 /// When used in a "get" or "put" step, metadata about the running build is made available
@@ -135,21 +87,23 @@ pub struct BuildMetadata {
 
 /// The methods and associated types needed to implement a resource
 pub trait Resource {
-    /// Resource configuration, from the `source` field
-    type Source: DeserializeOwned + Debug;
     /// A version of the resource
-    type Version: Serialize + DeserializeOwned + Debug;
+    type Version: Serialize + DeserializeOwned;
+
+    /// Resource configuration, from the `source` field
+    type Source: DeserializeOwned + Default;
 
     /// Parameters for the "in" step, from the `params` field
-    type InParams: DeserializeOwned + Debug;
+    type InParams: DeserializeOwned + Default;
     /// A list of key-value pairs for the "in" step. This data is intended for public
     /// consumption and will make it upstream, intended to be shown on the build's page.
-    type InMetadata: Serialize + Debug + IntoMetadataKV;
+    type InMetadata: Serialize + IntoMetadataKV;
+
     /// Parameters for the "out" step, from the `params` field
-    type OutParams: DeserializeOwned + Debug;
+    type OutParams: DeserializeOwned + Default;
     /// A list of key-value pairs for the "out" step. This data is intended for public
     /// consumption and will make it upstream, intended to be shown on the build's page.
-    type OutMetadata: Serialize + Debug + IntoMetadataKV;
+    type OutMetadata: Serialize + IntoMetadataKV;
 
     /// A resource type's check method is invoked to detect new versions of the resource. It is
     /// given the configured source and current version, and must return the array of new
@@ -173,7 +127,7 @@ pub trait Resource {
     fn resource_in(
         source: Self::Source,
         version: Self::Version,
-        params: Option<Self::InParams>,
+        params: Self::InParams,
         output_path: &str,
     ) -> Result<InOutput<Self::Version, Self::InMetadata>, Box<std::error::Error>>;
 
@@ -187,7 +141,7 @@ pub trait Resource {
     /// [Concourse documentation](https://concourse-ci.org/implementing-resource-types.html#out)
     fn resource_out(
         source: Self::Source,
-        params: Option<Self::OutParams>,
+        params: Self::OutParams,
         input_path: &str,
     ) -> OutOutput<Self::Version, Self::OutMetadata>;
 
@@ -216,8 +170,11 @@ pub trait Resource {
 #[macro_export]
 macro_rules! create_resource {
     ($resource:ty) => {
+        use std::io::Read;
+
+        use concourse_resource::internal::*;
+
         fn main() {
-            use std::io::Read;
             let mut input_buffer = String::new();
             let stdin = std::io::stdin();
             let mut handle = stdin.lock();
@@ -236,7 +193,7 @@ macro_rules! create_resource {
                         <$resource as Resource>::resource_check(input.source, input.version);
                     println!(
                         "{}",
-                        serde_json::to_string(&result).expect("error serializing response")
+                        serde_json::to_string(&result).expect("error serializing output")
                     );
                 }
                 "/opt/resource/in" => {
@@ -262,7 +219,7 @@ macro_rules! create_resource {
                                 version,
                                 metadata: metadata.map(|md| md.into_metadata_kv())
                             })
-                            .expect("error serializing response")
+                            .expect("error serializing output")
                         ),
                     };
                 }
@@ -282,7 +239,7 @@ macro_rules! create_resource {
                             version: result.version,
                             metadata: result.metadata.map(|md| md.into_metadata_kv())
                         })
-                        .expect("error serializing response")
+                        .expect("error serializing output")
                     );
                 }
                 v => eprintln!("unexpected being called as '{}'", v),
