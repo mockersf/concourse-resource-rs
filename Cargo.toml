@@ -8,7 +8,7 @@ repository = "https://github.com/mockersf/concourse-resource-rs"
 homepage = "https://github.com/mockersf/concourse-resource-rs"
 documentation = "https://docs.rs/concourse-resource"
 keywords = ["concourse", "CI"]
-license = "APACHE-2.0"
+license = "Apache-2.0"
 readme = "README.md"
 
 [dependencies]
