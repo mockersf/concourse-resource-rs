@@ -3,6 +3,13 @@ name = "concourse-resource-derive"
 version = "0.1.0"
 authors = ["François Mockers <mockersf@gmail.com>"]
 edition = "2018"
+description = "Helper create for a derivation for concourse-resource"
+repository = "https://github.com/mockersf/concourse-resource-rs"
+homepage = "https://github.com/mockersf/concourse-resource-rs"
+documentation = "https://docs.rs/concourse-resource"
+keywords = ["concourse"]
+license = "APACHE-2.0"
+readme = "README.md"
 
 [lib]
 proc-macro = true
