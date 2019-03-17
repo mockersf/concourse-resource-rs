@@ -4,6 +4,8 @@ stages:
   - test
   - name: "Deploy Doc"
     if: branch = master
+  - name: "Build docker examples"
+    if: branch = master
 
 matrix:
   fast_finish: true
@@ -45,6 +47,14 @@ matrix:
           git clone https://github.com/davisp/ghp-import.git &&
           ./ghp-import/ghp_import.py -n -p -f -m "Documentation upload" -r https://"$GH_TOKEN"@github.com/"$TRAVIS_REPO_SLUG.git" target/doc &&
           echo "Uploaded documentation"
+    - stage: "Build docker examples"
+      rust: stable
+      name: hello_world
+      script: 
+        - |
+          docker build --build-arg EXAMPLE=hello_world . -t mockersf/concourse-resource-rs-examples:hello_world
+          docker login -u "$(DOCKER_LOGIN)" -p "$(DOCKER_PASSWORD)"
+          docker push mockersf/concourse-resource-rs-examples:hello_world
 
 cache:
   - cargo
