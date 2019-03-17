@@ -62,22 +62,27 @@ impl Resource for HelloWorld {
     type OutMetadata = concourse_resource::Empty;
 
     fn resource_check(
-        _source: Self::Source,
+        _source: Option<Self::Source>,
         _version: Option<Self::Version>,
     ) -> Vec<Self::Version> {
-        vec![]
+        vec![Self::Version {
+            ver: String::from("static"),
+        }]
     }
 
     fn resource_in(
-        source: Self::Source,
+        source: Option<Self::Source>,
         _version: Self::Version,
-        params: Self::InParams,
+        params: Option<Self::InParams>,
         output_path: &str,
     ) -> Result<InOutput<Self::Version, Self::InMetadata>, Box<std::error::Error>> {
-        let action = params.action;
+        let action = params
+            .as_ref()
+            .map(|p| p.action)
+            .unwrap_or_else(|| Action::default());
         let name = params
-            .name
-            .or(source.name)
+            .and_then(|p| p.name)
+            .or(source.and_then(|s| s.name))
             .unwrap_or_else(|| String::from("world"));
 
         let hello_world = format!("{}, {}!", action, name);
@@ -96,8 +101,8 @@ impl Resource for HelloWorld {
     }
 
     fn resource_out(
-        _source: Self::Source,
-        _params: Self::OutParams,
+        _source: Option<Self::Source>,
+        _params: Option<Self::OutParams>,
         _input_path: &str,
     ) -> OutOutput<Self::Version, Self::OutMetadata> {
         OutOutput {

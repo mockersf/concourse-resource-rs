@@ -40,8 +40,7 @@ pub struct OutOutputKV<V> {
 #[derive(Deserialize)]
 pub struct CheckInput<S, V> {
     /// Resource configuration, from the `source` field
-    #[serde(default)]
-    pub source: S,
+    pub source: Option<S>,
     /// Latest version retrieved, or `None` on first check
     pub version: Option<V>,
 }
@@ -51,13 +50,11 @@ pub struct CheckInput<S, V> {
 #[derive(Deserialize)]
 pub struct InInput<S, V, P> {
     /// Resource configuration, from the `source` field
-    #[serde(default)]
-    pub source: S,
+    pub source: Option<S>,
     /// Version to retrieve
     pub version: V,
     /// Step configuration, from the `params` field
-    #[serde(default)]
-    pub params: P,
+    pub params: Option<P>,
 }
 
 /// Input of the "out" step of the resource
@@ -65,9 +62,7 @@ pub struct InInput<S, V, P> {
 #[derive(Deserialize)]
 pub struct OutInput<S, P> {
     /// Resource configuration, from the `source` field
-    #[serde(default)]
-    pub source: S,
+    pub source: Option<S>,
     /// Step configuration, from the `params` field
-    #[serde(default)]
-    pub params: P,
+    pub params: Option<P>,
 }

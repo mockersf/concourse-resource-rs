@@ -91,16 +91,16 @@ pub trait Resource {
     type Version: Serialize + DeserializeOwned;
 
     /// Resource configuration, from the `source` field
-    type Source: DeserializeOwned + Default;
+    type Source: DeserializeOwned;
 
     /// Parameters for the "in" step, from the `params` field
-    type InParams: DeserializeOwned + Default;
+    type InParams: DeserializeOwned;
     /// A list of key-value pairs for the "in" step. This data is intended for public
     /// consumption and will make it upstream, intended to be shown on the build's page.
     type InMetadata: Serialize + IntoMetadataKV;
 
     /// Parameters for the "out" step, from the `params` field
-    type OutParams: DeserializeOwned + Default;
+    type OutParams: DeserializeOwned;
     /// A list of key-value pairs for the "out" step. This data is intended for public
     /// consumption and will make it upstream, intended to be shown on the build's page.
     type OutMetadata: Serialize + IntoMetadataKV;
@@ -110,7 +110,10 @@ pub trait Resource {
     /// versions, in chronological order, including the requested version if it's still valid.
     ///
     /// [Concourse documentation](https://concourse-ci.org/implementing-resource-types.html#resource-check)
-    fn resource_check(source: Self::Source, version: Option<Self::Version>) -> Vec<Self::Version>;
+    fn resource_check(
+        source: Option<Self::Source>,
+        version: Option<Self::Version>,
+    ) -> Vec<Self::Version>;
 
     /// The in method is passed the configured source, a precise version of the resource to fetch
     /// and a destination directory. The method must fetch the resource and place it in the given
@@ -125,9 +128,9 @@ pub trait Resource {
     ///
     /// [Concourse documentation](https://concourse-ci.org/implementing-resource-types.html#in)
     fn resource_in(
-        source: Self::Source,
+        source: Option<Self::Source>,
         version: Self::Version,
-        params: Self::InParams,
+        params: Option<Self::InParams>,
         output_path: &str,
     ) -> Result<InOutput<Self::Version, Self::InMetadata>, Box<std::error::Error>>;
 
@@ -140,8 +143,8 @@ pub trait Resource {
     ///
     /// [Concourse documentation](https://concourse-ci.org/implementing-resource-types.html#out)
     fn resource_out(
-        source: Self::Source,
-        params: Self::OutParams,
+        source: Option<Self::Source>,
+        params: Option<Self::OutParams>,
         input_path: &str,
     ) -> OutOutput<Self::Version, Self::OutMetadata>;
 
