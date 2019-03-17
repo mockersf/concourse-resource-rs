@@ -1,0 +1,57 @@
+language: rust
+
+stages:
+  - test
+  - name: "Deploy Doc"
+    if: branch = master
+
+matrix:
+  fast_finish: true
+  include:
+    - stage: test
+      name: stable
+      env: CACHE_JOB=stable
+      rust: stable
+    - stage: test
+      name: beta
+      env: CACHE_JOB=beta
+      rust: stable
+    - stage: test
+      name: nightly
+      env: CACHE_JOB=nightly
+      rust: stable
+    - stage: test
+      name: rustfmt
+      env: CACHE_JOB=stable
+      rust: stable
+      install:
+        - rustup component add rustfmt
+      script:
+        - cargo fmt -- --check
+    - stage: test
+      name: clippy
+      env: CACHE_JOB=stable
+      rust: stable
+      install:
+        - rustup component add clippy
+      script:
+        - cargo clippy
+    - stage: "Deploy Doc"
+      rust: stable
+      script: 
+        - |
+          cargo doc --no-deps &&
+          echo "<meta http-equiv=refresh content=0;url=concourse-resource/index.html>" > target/doc/index.html &&
+          git clone https://github.com/davisp/ghp-import.git &&
+          ./ghp-import/ghp_import.py -n -p -f -m "Documentation upload" -r https://"$GH_TOKEN"@github.com/"$TRAVIS_REPO_SLUG.git" target/doc &&
+          echo "Uploaded documentation"
+
+cache:
+  - cargo
+  - timeout: 1000
+
+before_script:
+  - export PATH="$PATH:$HOME/.cargo/bin"
+
+script:
+  - cargo test
