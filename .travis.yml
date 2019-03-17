@@ -49,20 +49,20 @@ matrix:
           echo "Uploaded documentation"
     - stage: "Build docker examples"
       rust: stable
-      name: simple_hello_world
+      env: EXAMPLE=simple_hello_world
       script: 
         - |
-          docker build --build-arg EXAMPLE=simple_hello_world . -t mockersf/concourse-resource-rs-examples:hello_world
+          docker build --build-arg EXAMPLE=$EXAMPLE . -t mockersf/concourse-resource-rs-examples:$EXAMPLE
           docker login -u "$DOCKER_LOGIN" -p "$DOCKER_PASSWORD"
-          docker push mockersf/concourse-resource-rs-examples:simple_hello_world
+          docker push mockersf/concourse-resource-rs-examples:$EXAMPLE
     - stage: "Build docker examples"
       rust: stable
-      name: hello_world
+      env: EXAMPLE=hello_world
       script: 
         - |
-          docker build --build-arg EXAMPLE=hello_world . -t mockersf/concourse-resource-rs-examples:hello_world
+          docker build --build-arg EXAMPLE=$EXAMPLE . -t mockersf/concourse-resource-rs-examples:$EXAMPLE
           docker login -u "$DOCKER_LOGIN" -p "$DOCKER_PASSWORD"
-          docker push mockersf/concourse-resource-rs-examples:hello_world
+          docker push mockersf/concourse-resource-rs-examples:$EXAMPLE
 
 cache:
   - cargo
