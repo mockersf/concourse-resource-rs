@@ -51,7 +51,7 @@ impl Resource for HelloWorld {
         _version: Self::Version,
         _params: Option<Self::InParams>,
         output_path: &str,
-    ) -> Result<InOutput<Self::Version, Self::InMetadata>, Box<std::error::Error>> {
+    ) -> Result<InOutput<Self::Version, Self::InMetadata>, Box<dyn std::error::Error>> {
         let mut path = Path::new(output_path).to_path_buf();
         path.push("hello_world.txt");
         let mut file = File::create(path)?;

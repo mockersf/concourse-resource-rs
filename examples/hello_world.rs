@@ -75,7 +75,7 @@ impl Resource for HelloWorld {
         _version: Self::Version,
         params: Option<Self::InParams>,
         output_path: &str,
-    ) -> Result<InOutput<Self::Version, Self::InMetadata>, Box<std::error::Error>> {
+    ) -> Result<InOutput<Self::Version, Self::InMetadata>, Box<dyn std::error::Error>> {
         let action = params
             .as_ref()
             .map(|p| p.action)

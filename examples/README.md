@@ -18,6 +18,8 @@ This example will create a resource that will create a file `hello_world.txt" th
 
 The name can be set on either the ressource or the step, with the step overriding the ressource configuration.
 
+The action can be set on the step to be either "hello" or "goodbye".
+
 ### How to build:
 ```
 docker build --build-arg EXAMPLE=hello_world ../
