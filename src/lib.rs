@@ -132,7 +132,7 @@ pub trait Resource {
         version: Self::Version,
         params: Option<Self::InParams>,
         output_path: &str,
-    ) -> Result<InOutput<Self::Version, Self::InMetadata>, Box<std::error::Error>>;
+    ) -> Result<InOutput<Self::Version, Self::InMetadata>, Box<dyn std::error::Error>>;
 
     /// The out method is called with the resource's source configuration, the configured params
     /// and a path to the directory containing the build's full set of sources.
