@@ -79,10 +79,10 @@ impl Resource for HelloWorld {
         let action = params
             .as_ref()
             .map(|p| p.action)
-            .unwrap_or_else(|| Action::default());
+            .unwrap_or_else(Action::default);
         let name = params
             .and_then(|p| p.name)
-            .or(source.and_then(|s| s.name))
+            .or_else(|| source.and_then(|s| s.name))
             .unwrap_or_else(|| String::from("world"));
 
         let hello_world = format!("{}, {}!", action, name);
