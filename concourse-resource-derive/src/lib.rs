@@ -21,7 +21,6 @@ extern crate proc_macro;
 
 use crate::proc_macro::TokenStream;
 use quote::quote;
-use syn;
 
 #[proc_macro_derive(IntoMetadataKV)]
 pub fn metadata_kv_derive(input: TokenStream) -> TokenStream {
