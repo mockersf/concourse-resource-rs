@@ -74,7 +74,7 @@ pub struct BuildMetadata {
     /// a guid in the future. Treat it as an absolute reference to the build.
     pub id: String,
     /// The build number within the build's job.
-    pub name: Option<u32>,
+    pub name: Option<String>,
     /// The name of the build's job.
     pub job_name: Option<String>,
     /// The pipeline that the build's job lives in.
@@ -155,10 +155,7 @@ pub trait Resource {
     fn build_metadata() -> BuildMetadata {
         BuildMetadata {
             id: std::env::var("BUILD_ID").expect("environment variable BUILD_ID should be present"),
-            name: std::env::var("BUILD_NAME")
-                .map_err(|_| ())
-                .and_then(|v| v.parse::<u32>().map_err(|_| ()))
-                .ok(),
+            name: std::env::var("BUILD_NAME").ok(),
             job_name: std::env::var("BUILD_JOB_NAME").ok(),
             pipeline_name: std::env::var("BUILD_PIPELINE_NAME").ok(),
             team_name: std::env::var("BUILD_TEAM_NAME")
