@@ -2,8 +2,6 @@ language: rust
 
 stages:
   - test
-  - name: "Deploy Doc"
-    if: branch = master
   - name: "Build docker examples"
     if: branch = master
 
@@ -38,19 +36,10 @@ matrix:
         - rustup component add clippy
       script:
         - cargo clippy
-    - stage: "Deploy Doc"
-      rust: stable
-      script: 
-        - |
-          cargo doc --no-deps &&
-          echo "<meta http-equiv=refresh content=0;url=concourse_resource/index.html>" > target/doc/index.html &&
-          git clone https://github.com/davisp/ghp-import.git &&
-          ./ghp-import/ghp_import.py -n -p -f -m "Documentation upload" -r https://"$GH_TOKEN"@github.com/"$TRAVIS_REPO_SLUG.git" target/doc &&
-          echo "Uploaded documentation"
     - stage: "Build docker examples"
       rust: stable
       env: EXAMPLE=simple_hello_world
-      script: 
+      script:
         - |
           docker build --build-arg EXAMPLE=$EXAMPLE . -t mockersf/concourse-resource-rs-examples:$EXAMPLE
           docker login -u "$DOCKER_LOGIN" -p "$DOCKER_PASSWORD"
@@ -58,7 +47,7 @@ matrix:
     - stage: "Build docker examples"
       rust: stable
       env: EXAMPLE=hello_world
-      script: 
+      script:
         - |
           docker build --build-arg EXAMPLE=$EXAMPLE . -t mockersf/concourse-resource-rs-examples:$EXAMPLE
           docker login -u "$DOCKER_LOGIN" -p "$DOCKER_PASSWORD"
