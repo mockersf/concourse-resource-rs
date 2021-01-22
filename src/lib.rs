@@ -16,6 +16,7 @@
 //! [Concourse documentation](https://concourse-ci.org/implementing-resource-types.html)
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde_json::{Map, Value};
 
 pub use concourse_resource_derive::*;
 
@@ -64,8 +65,9 @@ impl IntoMetadataKV for Empty {
 /// When used in a "get" or "put" step, metadata about the running build is made available
 /// via environment variables.
 ///
-/// If the build is a one-off, `build_name`, `build_job_name`, and `build_pipeline_name`
-/// will be `None`.
+/// If the build is a one-off, `name`, `job_name`, `pipeline_name`, and `pipeline_instance_vars`
+/// will be `None`. `pipeline_instance_vars` will also be `None` if the build's pipeline is not a
+/// pipeline instance (i.e. it is a regular pipeline).
 ///
 /// [Concourse documentation](https://concourse-ci.org/implementing-resource-types.html#resource-metadata)
 #[derive(Debug)]
@@ -79,6 +81,8 @@ pub struct BuildMetadata {
     pub job_name: Option<String>,
     /// The pipeline that the build's job lives in.
     pub pipeline_name: Option<String>,
+    /// The pipeline's instance vars, used to differentiate pipeline instances.
+    pub pipeline_instance_vars: Option<Map<String, Value>>,
     /// The team that the build belongs to.
     pub team_name: String,
     /// The public URL for your ATC; useful for debugging.
@@ -158,6 +162,9 @@ pub trait Resource {
             name: std::env::var("BUILD_NAME").ok(),
             job_name: std::env::var("BUILD_JOB_NAME").ok(),
             pipeline_name: std::env::var("BUILD_PIPELINE_NAME").ok(),
+            pipeline_instance_vars: std::env::var("BUILD_PIPELINE_INSTANCE_VARS")
+                .ok()
+                .and_then(|instance_vars| serde_json::from_str(&instance_vars[..]).ok()),
             team_name: std::env::var("BUILD_TEAM_NAME")
                 .expect("environment variable BUILD_TEAM_NAME should be present"),
             atc_external_url: std::env::var("ATC_EXTERNAL_URL")
