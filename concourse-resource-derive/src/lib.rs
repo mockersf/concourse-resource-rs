@@ -42,10 +42,17 @@ fn impl_metadata_kv(name: syn::Ident, data_struct: syn::DataStruct) -> TokenStre
         .iter()
         .filter_map(|field| field.ident.as_ref())
         .map(|field_name| {
+            let val = quote! {
+                serde_json::to_string(&self.#field_name).unwrap()
+            };
             quote! {
                 concourse_resource::internal::KV {
                     name: String::from(stringify!(#field_name)),
-                    value: serde_json::to_string(&self.#field_name).unwrap()
+                    value: #val.strip_prefix('"')
+                    .unwrap_or(&#val)
+                    .strip_suffix('"')
+                    .unwrap_or(&#val)
+                    .to_string()
                 }
             }
         })
