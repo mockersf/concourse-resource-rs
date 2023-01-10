@@ -21,4 +21,4 @@ concourse-resource-derive = { path = "concourse-resource-derive", version = "0.2
 
 [dev-dependencies.serde_with]
 features = ["json"]
-version = "1.11"
+version = "2.2"
